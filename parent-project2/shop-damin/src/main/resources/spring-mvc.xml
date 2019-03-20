@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--扫描包-->
+    <context:component-scan base-package="com.ssm.controller,com.ssm.exception,com.ssm.api"/>
+
+
+
+    <!--mvc注解驱动-->
+    <mvc:annotation-driven/>
+    <!--过滤静态资源-->
+    <mvc:default-servlet-handler/>
+    <!--视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/v/"></property>
+        <property name="suffix" value=".jsp"></property>
+    </bean>
+
+
+
+    <!--<mvc:annotation-driven conversion-service="conversionService">-->
+
+    <!--</mvc:annotation-driven>-->
+
+    <!--<bean id="conversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">-->
+        <!--<property name="converters">-->
+            <!--<set>-->
+                <!--<bean class="controller.StringToDateConverter"></bean>-->
+            <!--</set>-->
+        <!--</property>-->
+    <!--</bean>-->
+
+
+    <!--配置文件上传相关-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="10485760"/>
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="maxUploadSizePerFile" value="1048576" />
+        <property name="uploadTempDir" value="file:d:\temp"/>
+    </bean>
+
+
+    <!-- 开启aop，对类代理 -->
+    <!--不加该句话 无法使用shiro的注解-->
+
+    <!--
+    当使用shiro注解权限的时候,这几个配置必须放在spirngmvc中
+    使用注解模式声明权限或者角色的时候UnauthorizedUrl这个配置是无效的
+    需要自己手动捕获异常,然后跳转页面
+
+    -->
+    <!-- =========================================================
+     Shiro Spring-specific integration
+     ========================================================= -->
+    <!-- Post processor that automatically invokes init() and destroy() methods
+         for Spring-configured Shiro objects so you don't have to
+         1) specify an init-method and destroy-method attributes for every bean
+            definition and
+         2) even know which Shiro objects require these methods to be
+            called. -->
+    <!--如果使用shiro的朱姐功能  必须加上 如下配置-->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!-- Enable Shiro Annotations for Spring-configured beans.  Only run after
+         the lifecycleBeanProcessor has run: -->
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+</beans>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssm.mapper.ProductMapper">
+  <resultMap id="BaseResultMap" type="com.ssm.pojo.Product">
+    <id column="product_id" jdbcType="BIGINT" property="productId" />
+    <result column="product_name" jdbcType="VARCHAR" property="productName" />
+    <result column="bar_code" jdbcType="VARCHAR" property="barCode" />
+    <result column="brand_id" jdbcType="BIGINT" property="brandId" />
+    <result column="first_category_id" jdbcType="INTEGER" property="firstCategoryId" />
+    <result column="second_category_id" jdbcType="INTEGER" property="secondCategoryId" />
+    <result column="price" jdbcType="DECIMAL" property="price" />
+    <result column="publish_status" jdbcType="INTEGER" property="publishStatus" />
+    <result column="audit_status" jdbcType="INTEGER" property="auditStatus" />
+    <result column="weight" jdbcType="REAL" property="weight" />
+    <result column="length" jdbcType="REAL" property="length" />
+    <result column="height" jdbcType="REAL" property="height" />
+    <result column="width" jdbcType="REAL" property="width" />
+    <result column="color_type" jdbcType="VARCHAR" property="colorType" />
+    <result column="production_date" jdbcType="TIMESTAMP" property="productionDate" />
+    <result column="descript" jdbcType="VARCHAR" property="descript" />
+    <result column="indate" jdbcType="TIMESTAMP" property="indate" />
+    <result column="modified_time" jdbcType="TIMESTAMP" property="modifiedTime" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    product_id, product_name, bar_code, brand_id, first_category_id, second_category_id, 
+    price, publish_status, audit_status, weight, length, height, width, color_type, production_date, 
+    descript, indate, modified_time
+  </sql>
+
+
+
+  <!--
+   List<ProductVo> selectProductPages(Product product, int i, Integer limit);
+
+    long selectProductPagesCount(Product product);
+  -->
+  <select id="selectProductPages" resultMap="MyMap">
+    select p.*,b.brand_name from sy_product_info as p LEFT JOIN sy_brand_info as b on  p.brand_id=b.brand_id
+
+    LEFT JOIN sy_product_category as c on p.second_category_id = c.category_id
+
+    limit #{begin},#{end}
+  </select>
+
+
+  <select id="selectProductPagesCount" resultType="long">
+    select count(*) from sy_product_info as p LEFT JOIN sy_brand_info as b on  p.brand_id=b.brand_id
+
+    LEFT JOIN sy_product_category as c on p.second_category_id = c.category_id
+  </select>
+
+  <resultMap id="MyMap" type="productvo" extends="BaseResultMap">
+    <result column="brand_name" property="brandName"/>
+
+  </resultMap>
+
+</mapper>

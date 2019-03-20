@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+
+    <!-- =========================================================
+         Shiro Core Components - Not Spring Specific
+         ========================================================= -->
+    <!-- Shiro's main business-tier object for web-enabled applications
+         (use DefaultSecurityManager instead when there is no web environment)-->
+    <!--配置安全管理器：securityManager -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!-- Single com.ssm.realm app.  If you have multiple realms, use the 'realms' property instead. -->
+        <property name="sessionMode" value="native"/>
+        <!--注入relm  主要用来认证和授权-->
+       <property name="realm" ref="myRealm"/>
+
+        <property name="rememberMeManager" ref="rememberMeManager"/>
+    </bean>
+
+
+
+
+    <!-- 会话Cookie模板 -->
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <!--设置cookie的名字-->
+        <constructor-arg value="rememberMe"/>
+        <!--更加安全-->
+        <property name="httpOnly" value="true"/>
+        <!--设置cookie的时长-->
+        <!--设置1天  单位s  -->
+        <property name="maxAge" value="86400"/><!-- 30天 -->
+
+    </bean>
+
+    <!-- rememberMe管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <property name="cookie" ref="rememberMeCookie"/>
+        <property name="cipherKey" value="#{T(org.apache.shiro.codec.Base64).decode('6ZmI6I2j5Y+R5aSn5ZOlAA==')}"/>
+    </bean>
+
+
+
+    <!-- Used by the SecurityManager to access security data (users, roles, etc).
+         Many other com.ssm.realm implementations can be used too (PropertiesRealm,
+         LdapRealm, etc. -->
+    <bean id="myRealm" class="com.ssm.realm.MyRealm">
+        <!-- 配置密码匹配器  -->
+        <property name="credentialsMatcher">
+            <!-- The 'bootstrapDataPopulator' Sha256 hashes the password
+                 (using the username as the salt) then base64 encodes it: -->
+           <bean class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+               <!--指定加密的方式：  md5-->
+                <property name="hashAlgorithmName" value="MD5"/>
+                <!-- true means hex encoded, false means base64 encoded -->
+               <!--配置MD5加密的次数-->
+               <property name="hashIterations" value="1024"/>
+            </bean>
+        </property>
+    </bean>
+
+
+
+
+    <!-- Define the Shiro Filter here (as a FactoryBean) instead of directly in web.xml -
+         web.xml uses the DelegatingFilterProxy to access this bean.  This allows us
+         to wire things with more control as well utilize nice Spring things such as
+         PropertiesPlaceholderConfigurer and abstract beans or anything else we might need: -->
+<!--我们需要在web.xml里面来定义一个shiro的过滤器，shiro的过滤器回去访问该ShiroFilterFactoryBean，过滤器的name只要和shiroFilter一致。-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!--注入安全管理器-->
+        <property name="securityManager" ref="securityManager"/>
+        <!--配置没有登录的时候 访问的页面-->
+        <property name="loginUrl" value="/login"/>
+        <!--登陆成功跳转的页面  一般不配置  我们登录成功之后  自己制定跳转-->
+    <!--    <property name="successUrl" value="/s/index"/>-->
+        <!--没有权限的时候  要跳转的页面-->
+        <property name="unauthorizedUrl" value="/v/unauthorized"/>
+        <!-- The 'filters' property is not necessary since any declared javax.servlet.Filter bean
+             defined will be automatically acquired and available via its beanName in chain
+             definitions, but you can perform overrides or parent/child consolidated configuration
+             here if you like: -->
+        <!-- <property name="filters">
+            <util:map>
+                <entry key="aName" value-ref="someFilterPojo"/>
+            </util:map>
+        </property> -->
+        <property name="filterChainDefinitions">
+            <!--   anon只不需要登录就可以访问的
+                   authc:需要登录后才能进行访问的资源
+                   logout:退出的过滤器
+                   路径匹配规则是从上往下进行匹配，直到匹配到位置。
+
+
+            -->
+            <value>
+                /imgCode=anon
+                /v/unauthorized=anon
+                /login=anon
+                /userlogin = anon
+                /static/** = anon
+                /api/**=anon
+                /logout=logout
+                # everything else requires authentication: /** = authc
+                # user过滤器 记住我 和登录之后 都能够访问
+                # authc 只能登录
+                /**=user
+
+            </value>
+        </property>
+    </bean>
+
+
+
+
+</beans>
